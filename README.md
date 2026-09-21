@@ -308,6 +308,60 @@ If you get duplicate key errors:
 - A student with that roll_no already exists
 - Use `find_student_by_roll()` to check before adding
 
+## People Search API (Flask + MongoDB)
+
+A small Flask API with a single `/search` endpoint that searches a keyword across
+`first_name` and `last_name`. The mock data (`MOCK_DATA.json`) is loaded into MongoDB
+once; every request is answered by an indexed MongoDB query with a projection and a
+limit, so the JSON file is never read and the full collection is never loaded into memory.
+
+### Setup
+
+```bash
+pip install -r requirements.txt
+python generate_mock_data.py          # optional: regenerate MOCK_DATA.json
+python seed_mock_data.py --drop       # load MOCK_DATA.json into MongoDB + build indexes
+python app.py                         # serves on http://localhost:5000
+```
+
+### Endpoint
+
+`GET /search`
+
+| Param   | Default  | Description                                                 |
+|---------|----------|-------------------------------------------------------------|
+| `q`     | required | Search keyword, matched against first and last name          |
+| `limit` | 20       | Page size, max 100                                           |
+| `skip`  | 0        | Offset for pagination                                        |
+| `match` | `prefix` | `prefix` (index range scan) or `contains` (substring search) |
+
+```bash
+curl "http://localhost:5000/search?q=sha&limit=3"
+```
+
+```json
+{
+  "query": "sha",
+  "match": "prefix",
+  "limit": 3,
+  "skip": 0,
+  "count": 3,
+  "total": 45,
+  "results": [
+    {"id": 37, "first_name": "Omar", "last_name": "Shah", "email": "omar.shah37@example.com", "gender": "Non-binary"}
+  ]
+}
+```
+
+### How the query stays cheap
+
+- The seeder stores normalized `first_name_lower` / `last_name_lower` fields and indexes both.
+- The search runs `{"$or": [{"first_name_lower": /^kw/}, {"last_name_lower": /^kw/}]}`, which
+  MongoDB resolves with an `IXSCAN` on each branch (verified with `.explain()`), rather than a
+  collection scan.
+- Only the projected fields are returned, and `skip`/`limit` page the cursor server-side.
+- `match=contains` trades the index range scan for an unanchored substring regex.
+
 ## License
 
 This is a learning project for educational purposes.
