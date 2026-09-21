@@ -1,8 +1,15 @@
 """Flask API exposing a single `/search` endpoint backed by MongoDB."""
 
+import os
+
 from flask import Flask, jsonify, request
 
-from people_search import DEFAULT_LIMIT, MAX_LIMIT, PeopleSearch
+from people_search import (
+    DEFAULT_LIMIT,
+    MAX_KEYWORD_LENGTH,
+    MAX_LIMIT,
+    PeopleSearch,
+)
 
 app = Flask(__name__)
 store = PeopleSearch()
@@ -26,6 +33,13 @@ def search():
     keyword = (request.args.get("q") or "").strip()
     if not keyword:
         return jsonify({"error": "query parameter 'q' is required"}), 400
+    if len(keyword) > MAX_KEYWORD_LENGTH:
+        return (
+            jsonify({"error": f"'q' must be at most {MAX_KEYWORD_LENGTH} characters"}),
+            400,
+        )
+    if any(character < " " or character == "\x7f" for character in keyword):
+        return jsonify({"error": "'q' must not contain control characters"}), 400
 
     match = request.args.get("match", "prefix")
     if match not in {"prefix", "contains"}:
@@ -58,4 +72,8 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=os.getenv("FLASK_DEBUG", "0") == "1",
+    )
