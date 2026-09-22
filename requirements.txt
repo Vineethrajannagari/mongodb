@@ -1,2 +1,8 @@
-pymongo>=4.6.0
+# WhatsApp Message Sender Dependencies
+fastapi>=0.104.0
+uvicorn>=0.24.0
+requests>=2.31.0
 python-dotenv>=1.0.0
+
+# Optional - for message history logging
+pymongo>=4.6.0

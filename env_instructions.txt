@@ -1,0 +1,21 @@
+Your MongoDB Atlas Connection String:
+mongodb+srv://vineethrajannagari_db_user:<db_password>@cluster0.s78cfde.mongodb.net/?appName=cluster0
+
+STEPS TO CONFIGURE:
+
+1. Create a file named .env in your mongodb folder
+2. Replace <db_password> with your actual database password
+3. Paste this into the .env file:
+
+MONGO_URI=mongodb+srv://vineethrajannagari_db_user:YOUR_ACTUAL_PASSWORD@cluster0.s78cfde.mongodb.net/?appName=cluster0
+
+IMPORTANT:
+- Replace YOUR_ACTUAL_PASSWORD with your real password
+- Do not include the angle brackets < >
+- The connection string should have your actual password in place of <db_password>
+
+Example:
+MONGO_URI=mongodb+srv://vineethrajannagari_db_user:MySecurePassword123@cluster0.s78cfde.mongodb.net/?appName=cluster0
+
+After creating the .env file, run:
+python demo.py
